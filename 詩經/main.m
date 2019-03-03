@@ -5,11 +5,13 @@
 
 
 SetDirectory@NotebookDirectory[];
-$wait = 0.1;
 
 
 (* ::Chapter:: *)
 (*Functions*)
+
+
+MapMonitor = ResourceFunction["DynamicMap"];
 
 
 (* ::Chapter:: *)
@@ -17,7 +19,7 @@ $wait = 0.1;
 
 
 Block[
-	{$base, ask, getSubsections, getTitle, root, expand0, expand1, expand2, $tasks},
+	{$wait = 0.1, $base, ask, getSubsections, getTitle, root, expand0, expand1, expand2, $tasks},
 	If[FileExistsQ@"Chapter.CSV", Return[Nothing]];
 	$base[str_] := "https://api.ctext.org/gettext?urn=" <> str;
 	ask[url_] := Check[
@@ -56,3 +58,26 @@ Block[
 
 (* ::Chapter:: *)
 (*Content*)
+
+
+Block[
+	{$wait = 0.5, askS, askT, read},
+	If[FileExistsQ@"data.json", Return[Nothing]];
+	askS[url_String] := Check[
+		Pause@RandomReal[$wait];
+		Import["https://api.ctext.org/gettext?if=zh&remap=gb&urn=" <> url, "RawJSON"],
+		askS[url]
+	];
+	askT[url_String] := Check[
+		Pause@RandomReal[$wait];
+		Import["https://api.ctext.org/gettext?if=zh&urn=" <> url, "RawJSON"],
+		askT[url]
+	];
+	read[record_Association] := <|
+		"Chapter" -> record@"Chapter",
+		"Traditional" -> askT[record@"Token"]["fulltext"],
+		"Simplified" -> askS[record@"Token"]["fulltext"]
+	|>;
+	data = MapMonitor[read, chapters][[2]];
+	Export["data.json", Dataset@data, "RawJSON"]
+];
