@@ -1,0 +1,23 @@
+# IDE
+.vs/*
+.vscode/*
+.idea/*
+*.iml
+
+# Build
+*.nb
+dist/
+share/*
+node_modules/
+**/release/*.csv
+
+# Metadata
+*-map.json
+
+# yarn
+yarn.lock
+
+# Release
+*.zip
+*.mx
+*-base.csv
