@@ -19,40 +19,44 @@ MapMonitor = ResourceFunction["DynamicMap"];
 
 
 Block[
-	{$wait = 0.1, $base, ask, getSubsections, getTitle, root, expand0, expand1, expand2, $tasks},
+	{format, getTitle, chapters},
 	If[FileExistsQ@"Chapter.CSV", Return[Nothing]];
-	$base[str_] := "https://api.ctext.org/gettext?urn=" <> str;
-	ask[url_] := Check[
-		Pause@RandomReal[{$wait, 10$wait}];
-		Import[$base@url, "RawJSON"],
-		ask[url]
+	format[link_, chapter_, contant_] := Block[
+		{},
+		If[!StringContainsQ[link, "book-of-poetry"], Return[Nothing]];
+		If[chapter == "\:8a69\:7d93", Return[Nothing]];
+		Cases[contant,
+			XMLElement["a", {__, "href" -> h_}, {c_}] :> <|
+				"chapter" -> StringJoin["\:8a69\:7d93|", chapter, "|", c],
+				"routing" -> StringJoin[StringTake[link, ;; -3], StringSplit[h, "/"][[2]]],
+				"url" -> "https://ctext.org/" <> h
+			|>,
+			Infinity
+		]
 	];
-	getSubsections[link_Association] := Block[
-		{json, format},
-		json = ask@link["url"];
-		format = <|
-			"title" -> StringJoin[link["title"], "|", json["title"]],
-			"route" -> StringJoin[link["route"], "/", Last@StringSplit[#, "/"]],
-			"url" -> #
-		|>&;
-		format /@ json["subsections"]
+	getTitle[chapter_Association] := Cases[
+		Import[chapter["url"], {"HTML", "XMLObject"}],
+		XMLElement["a", {"shape" -> "rect", "class" -> "popup", "href" -> h_}, {c_}] :> <|
+			"Chapter" -> StringJoin[chapter["chapter"], "|", c],
+			"Routing" -> StringJoin[chapter["routing"], "/", StringSplit[h, "/"][[2]]],
+			"Token" -> "ctp:" <> StringTake[h, ;; -4]
+		|>,
+		Infinity
 	];
-	getTitle[link_Association] := Block[
-		{json, format},
-		json = ask@link["url"];
-		Pause@RandomReal[{$wait, 2$wait}];
-		<|
-			"Chapter" -> StringJoin[link["title"], "|", json["title"]],
-			"Routing" -> link["route"],
-			"Token" -> link["url"]
-		|>
+	chapters = Flatten@Cases[
+		Import["https://ctext.org/book-of-poetry/zh", {"HTML", "XMLObject"}],
+		XMLElement[
+			"span",
+			{"class" -> "menuitem container"},
+			{
+				XMLElement["a", {__, "href" -> link_}, {chapter_}],
+				__,
+				XMLElement["span", {"class" -> "subcontents"}, contant_]
+			}
+		] :> format[link, chapter, contant],
+		Infinity
 	];
-	root = Import[$base@"ctp:book-of-poetry", "RawJSON"];
-	expand0 = <|"title" -> root["title"], "route" -> StringTake[#, 5 ;;], "url" -> #|>& /@ root["subsections"];
-	expand1 = Flatten[getSubsections /@ expand0];
-	expand2 = Flatten[getSubsections /@ expand1];
-	$tasks = Flatten[getTitle /@ expand2];
-	Export["Chapter.CSV", Dataset@$tasks]
+	Export["Chapter.CSV", Dataset@Flatten[MapMonitor[getTitle, chapters][[2]]]]
 ];
 
 
