@@ -43,7 +43,7 @@ Block[
 		|>,
 		Infinity
 	];
-	chapters = Flatten@Cases[
+	chapters = Cases[
 		Import["https://ctext.org/book-of-poetry/zh", {"HTML", "XMLObject"}],
 		XMLElement[
 			"span",
@@ -56,6 +56,18 @@ Block[
 		] :> format[link, chapter, contant],
 		Infinity
 	];
+	chapters[[-1]] = MapAt[
+		StringRiffle[Insert[StringSplit[#, "|"], "\:980c", 2], "|"]&,
+		chapters[[-1]],
+		{All, 1}
+	];
+	chapters = Flatten@{
+		chapters,
+		format["book-of-poetry/sacrificial-odes-of-zhou/zh", "\:980c", {
+			XMLElement["a", {__, "href" -> "book-of-poetry/praise-odes-of-lu/zh"}, {"\:9b6f\:980c"}],
+			XMLElement["a", {__, "href" -> "book-of-poetry/sacrificial-odes-of-shang/zh"}, {"\:5546\:980c"}]
+		}]
+	};
 	Export["Chapter.CSV", Dataset@Flatten[MapMonitor[getTitle, chapters][[2]]]]
 ];
 
