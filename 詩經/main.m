@@ -5,7 +5,6 @@
 
 
 SetDirectory@NotebookDirectory[];
-$base[str_] := "https://api.ctext.org/gettext?urn=" <> str;
 $wait = 0.1;
 
 
@@ -13,20 +12,19 @@ $wait = 0.1;
 (*Functions*)
 
 
-ask[url_] := Check[
-	Import[$base@url, "RawJSON"];
-	Pause@RandomReal[{$wait, 10$wait}],
-	ask[url]
-];
-
-
 (* ::Chapter:: *)
 (*Chapters*)
 
 
 Block[
-	{getSubsections, getTitle, root, expand0, expand1, expand2, $tasks},
-	If[FileExistsQ@"Chapter.csv", Return[Nothing]];
+	{$base, ask, getSubsections, getTitle, root, expand0, expand1, expand2, $tasks},
+	If[FileExistsQ@"Chapter.CSV", Return[Nothing]];
+	$base[str_] := "https://api.ctext.org/gettext?urn=" <> str;
+	ask[url_] := Check[
+		Pause@RandomReal[{$wait, 10$wait}];
+		Import[$base@url, "RawJSON"],
+		ask[url]
+	];
 	getSubsections[link_Association] := Block[
 		{json, format},
 		json = ask@link["url"];
@@ -51,7 +49,8 @@ Block[
 	expand0 = <|"title" -> root["title"], "route" -> StringTake[#, 5 ;;], "url" -> #|>& /@ root["subsections"];
 	expand1 = Flatten[getSubsections /@ expand0];
 	expand2 = Flatten[getSubsections /@ expand1];
-	$tasks = Flatten[getTitle /@ expand2]
+	$tasks = Flatten[getTitle /@ expand2];
+	Export["Chapter.CSV", Dataset@$tasks]
 ];
 
 
