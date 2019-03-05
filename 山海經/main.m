@@ -12,13 +12,23 @@ SetDirectory@NotebookDirectory[];
 
 
 Block[
-	{chapters},
+	{format, $tasks, name = {"\:5c71\:6d77\:7d93", "shan-hai-jing"}},
 	If[FileExistsQ@"Chapter.CSV", Return[Nothing]];
-	chapters = {
-		{"Chapter", "Routing", "Token"},
-		{"\:9053\:5fb7\:7d93", "dao-de-jing", "ctp:dao-de-jing"}
-	};
-	Export["Chapter.CSV", chapters]
+	format[h_, c_] := If[
+		StringStartsQ[h, Last@name] && StringEndsQ[h, "zh"],
+		<|
+			"Chapter" -> StringJoin[First@name, "|" , c],
+			"Routing" -> StringTake[h, ;; -4],
+			"Token" -> "ctp:" <> StringTake[h, ;; -4]
+		|>,
+		Nothing
+	];
+	$tasks = Cases[
+		Import["https://ctext.org/" <> Last@name <> "/zh", {"HTML", "XMLObject"}],
+		XMLElement["a", {"shape" -> "rect", "href" -> h_}, {c_}] :> format[h, c],
+		Infinity
+	];
+	Export["Chapter.CSV", Dataset@$tasks]
 ];
 
 
@@ -48,4 +58,4 @@ Block[
 ];
 
 
-\[ScriptH]
+
