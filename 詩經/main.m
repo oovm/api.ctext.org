@@ -94,5 +94,5 @@ Block[
 		"Simplified" -> askS[record@"Token"]["fulltext"]
 	|>;
 	data = Flatten@MapMonitor[read, chapters][[2]];
-	Export["data.json", Dataset@data, "RawJSON"]
+	Export["data.json", data, "RawJSON"]
 ];
