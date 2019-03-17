@@ -70,6 +70,3 @@ Block[
 	data = MapMonitor[read, chapters][[2]];
 	Export["data.json", Flatten@data, "RawJSON"]
 ];
-
-
-
