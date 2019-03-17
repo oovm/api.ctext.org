@@ -9,7 +9,9 @@ https://ctext.org/plugins/apilist/zhs
 
 访问频率每秒一次, 如果触发上限则过一分钟重试
 
-## COPYRIGHT
 
+## Tasks
 
+- TODO: FIX unknown Unicode �
+- TODO: Add more Introduces
 

@@ -8,6 +8,16 @@ SetDirectory@NotebookDirectory[];
 
 
 (* ::Chapter:: *)
+(*Auxiliary Functions*)
+
+
+<< NETLink`;
+InstallNET[];
+LoadNETType["System.Text.Encoding"];
+MapMonitor = ResourceFunction["DynamicMap"];
+
+
+(* ::Chapter:: *)
 (*Chapters*)
 
 
@@ -36,18 +46,21 @@ Block[
 (*Content*)
 
 
-MapMonitor = ResourceFunction["DynamicMap"];
 Block[
-	{$wait = 10, chapters, askS, askT, read},
+	{$wait = 10, reader, chapters, ask, json, askS, askT, read},
 	If[FileExistsQ@"data.json", Return[Nothing]];
+	reader = Encoding`UTF8;
+	json = ImportString[FromCharacterCode@ToCharacterCode[#, "UTF-8"], "RawJSON"]&;
 	chapters = Normal@Import["Chapter.CSV", {"CSV", "Dataset"}, "HeaderLines" -> 1];
 	askS[url_String] := Block[
-		{ask = Import["https://api.ctext.org/gettext?if=zh&remap=gb&urn=" <> url, "RawJSON"]},
+		{link = "https://api.ctext.org/gettext?if=zh&remap=gb&urn=" <> url},
+		ask = json@reader@GetString[Normal@URLRead[link, "BodyByteArray"]];
 		If[!ListQ@ask["fulltext"], Pause@RandomReal[$wait];askS[url], ask]
 	];
 	askT[url_String] := Block[
-		{ask = Import["https://api.ctext.org/gettext?if=zh&urn=" <> url, "RawJSON"]},
-		If[!ListQ@ask["fulltext"], Pause@RandomReal[$wait];askS[url], ask]
+		{link = "https://api.ctext.org/gettext?if=zh&urn=" <> url},
+		ask = json@reader@GetString[Normal@URLRead[link, "BodyByteArray"]];
+		If[!ListQ@ask["fulltext"], Pause@RandomReal[$wait];askT[url], ask]
 	];
 	read[record_Association] := <|
 		"Chapter" -> record@"Chapter",
