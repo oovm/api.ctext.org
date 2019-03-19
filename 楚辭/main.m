@@ -17,7 +17,7 @@ LoadNETType["System.Text.Encoding"];
 MapMonitor = ResourceFunction["DynamicMap"];
 
 
-(* ::Chapter:: *)
+(* ::Chapter::Closed:: *)
 (*Chapters*)
 
 
@@ -53,7 +53,7 @@ Block[
 ];
 
 
-(* ::Chapter:: *)
+(* ::Chapter::Closed:: *)
 (*Content*)
 
 
@@ -81,3 +81,26 @@ Block[
 	data = MapMonitor[read, chapters][[2]];
 	Export["data.json", Flatten@data, "RawJSON"]
 ];
+
+
+(* ::Chapter:: *)
+(*Summary*)
+
+
+reader = Encoding`UTF8;
+json = ImportString[FromCharacterCode@ToCharacterCode[#, "UTF-8"], "RawJSON"]&;
+
+
+text=json@reader@GetString[Normal@ReadByteArray["data.json"]];
+
+
+chapter=StringDelete[StringJoin[First[text]["Traditional"]],{"\:ff0c","\:3002"}];
+
+
+chapter
+
+
+WordCloud
+
+
+WordCloud[StringSplit[chapter,""],ImageSize->{16,9}*20,FontFamily->"\:6977\:4f53"]
